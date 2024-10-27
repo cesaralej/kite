@@ -3,7 +3,7 @@ import { useLoaderData } from "react-router-dom";
 import { LoaderFunctionArgs } from "react-router-dom";
 import ChatHeader from "../components/Chats/ChatHeader";
 import MessageList from "../components/Chats/MessageList";
-import MessageInput from "../components/Chats/MessageInput";
+//import MessageInput from "../components/Chats/MessageInput";
 import mock from "../chats.json";
 import { Chat } from "../types";
 
@@ -22,7 +22,7 @@ const ChatPage: React.FC = () => {
     <>
       <ChatHeader person={chat.person} />
       <MessageList messages={chat.messages} />
-      <MessageInput />
+      {/* <MessageInput /> */}
     </>
   );
 };
