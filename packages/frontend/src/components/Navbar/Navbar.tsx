@@ -5,6 +5,7 @@ import { useAppContext } from "../../lib/contextLib";
 import { Auth } from "aws-amplify";
 import AppBarComponent from "./AppBar";
 import DrawerComponent from "./Drawer";
+import { useWebSocket } from "../../hooks/useWebSocket";
 import {
   FaUsers,
   FaDesktop,
@@ -25,6 +26,10 @@ const Navbar: React.FC = () => {
   const { userHasAuthenticated } = useAppContext();
   const navigate = useNavigate();
 
+  const {
+    disconnectWebSocket, // Get the disconnect function from your hook
+  } = useWebSocket();
+
   const toggleDrawer = (open: boolean) => {
     setDrawerOpen(open);
   };
@@ -39,6 +44,7 @@ const Navbar: React.FC = () => {
 
   async function handleLogout() {
     await Auth.signOut();
+    disconnectWebSocket();
     userHasAuthenticated(false);
     console.log("Logged out");
     handleMenuClose();

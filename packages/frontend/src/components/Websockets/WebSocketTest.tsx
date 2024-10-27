@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Auth } from "aws-amplify";
 import { loadUsers } from "../../api/users";
 import { fetchMessages } from "../../api/messages";
 import { useWebSocket } from "../../hooks/useWebSocket";
-import WebSocketControls from "./WebSocketControls";
-import UserList from "./UserList";
-import MessageInput from "./MessageInput";
-import MessageList from "./MessageList";
 import { User } from "../../types/User";
 import { Message } from "../../types/Message";
+import WebSocketControls from "./WebSocketControls";
+import UserList from "./UserList";
+import MessageInput from "../Chats/MessageInput";
+import MessageList from "./MessageList";
+import { Button } from "@mui/material";
 
 const filterMessages = (
   receivedMessages: Message[],
@@ -30,7 +31,9 @@ const WebSocketTest = () => {
   const [selectedUserConn, setSelectedUserConn] = useState<string | null>(null);
   const [customMessage, setCustomMessage] = useState("");
   const [receivedMessages, setReceivedMessages] = useState<Message[]>([]);
-  const [filteredMessages, setFilteredMessages] = useState<Message[]>([]); // New state for filtered messages
+  const [filteredMessages, setFilteredMessages] = useState<Message[]>([]);
+  const [showWebSocketControls, setShowWebSocketControls] = useState(false);
+  const [isChatActive, setIsChatActive] = useState(false);
 
   const onMessageReceived = (message: string, type: string) => {
     console.log("Received message");
@@ -38,13 +41,13 @@ const WebSocketTest = () => {
     const data = JSON.parse(message);
     //console.log("Parsed data:", data);
     const receivedMessage: Message = {
-      userId: data.userId, // Add appropriate value
-      toUserId: data.toUserId, // Add appropriate value
-      content: data.content, // Assuming content is the same as text
-      createdAt: data.createdAt, // Add appropriate value
-      messageId: data.messageId, // Add appropriate value
-      connectionId: "", // Add appropriate value
-      toConnectionId: "", // Add appropriate value
+      userId: data.userId,
+      toUserId: data.toUserId,
+      content: data.content,
+      createdAt: data.createdAt,
+      messageId: data.messageId,
+      connectionId: "",
+      toConnectionId: "",
     };
 
     setReceivedMessages((prevMessages) => [...prevMessages, receivedMessage]);
@@ -53,24 +56,43 @@ const WebSocketTest = () => {
     }
   };
 
-  const onConnectionStatusChange = (status: string) => {
+  const onConnectionStatusChange = useCallback((status: string) => {
     if (status === "Connected" || status === "Disconnected") {
       loadUsers().then(setUsers);
     }
     console.log("Connection status changed:", status);
-  };
+    //send a websocket message to all users to update their user list
+    const allConnections = users.map((user) => user.webSocketConnectionId);
+    console.log("All connections:", allConnections);
+    //sendMessage("updateUsers", "", "", allConnections);
+  }, []);
 
   const {
     connectWebSocket,
     disconnectWebSocket,
     sendMessage,
     connectionStatus,
-  } = useWebSocket(onMessageReceived, onConnectionStatusChange);
+    messages,
+  } = useWebSocket();
+
+  useEffect(() => {
+    onConnectionStatusChange(connectionStatus);
+  }, [connectionStatus, onConnectionStatusChange]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const message = messages[messages.length - 1];
+      onMessageReceived(message, "message");
+    }
+  }, [messages]);
 
   const loadInitialData = async () => {
     setIsLoading(true);
     const [messages, users] = await Promise.all([fetchMessages(), loadUsers()]);
-    setReceivedMessages(messages);
+    const sortedMessages = [...messages].sort((a, b) => {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+    setReceivedMessages(sortedMessages);
     setUsers(users);
     setIsLoading(false);
     try {
@@ -97,38 +119,52 @@ const WebSocketTest = () => {
   const handleSelect = (userId: string, userConn: string) => {
     setSelectedUserId(userId);
     setSelectedUserConn(userConn);
-    console.log("Handle select:", userId, userConn);
+    setIsChatActive(true);
   };
 
   const handleSendMessage = () => {
-    console.log("Handle send message to:", selectedUserId, selectedUserConn);
-    if (selectedUserId && selectedUserConn && customMessage) {
-      const sentMessage: Message = {
-        content: customMessage,
-        userId: name || "", // Add appropriate value
-        toUserId: selectedUserId, // Add appropriate value
-        createdAt: new Date().toISOString(),
-        messageId: "", // Add appropriate value
-        connectionId: "", // Add appropriate value
-        toConnectionId: selectedUserConn,
-      };
-      try {
-        sendMessage(
-          "sendMessage",
-          customMessage,
-          selectedUserId,
-          selectedUserConn
-        );
-      } catch (error) {
-        console.error("Error sending message:", error);
-      }
+    if (
+      !selectedUserId ||
+      !selectedUserConn ||
+      !customMessage.trim() ||
+      !name
+    ) {
+      console.error("Missing required fields for sending message");
+      return;
+    }
+
+    console.log("userID:", name);
+    console.log("toUserID:", selectedUserId);
+
+    const sentMessage: Message = {
+      content: customMessage.trim(),
+      userId: name,
+      toUserId: selectedUserId,
+      createdAt: new Date().toISOString(),
+      messageId: "",
+      connectionId: "",
+      toConnectionId: selectedUserConn,
+    };
+
+    const sentMessageString = JSON.stringify(sentMessage);
+
+    try {
+      sendMessage(
+        "sendMessage",
+        sentMessageString,
+        selectedUserId,
+        selectedUserConn
+      );
       setReceivedMessages((prevMessages) => [...prevMessages, sentMessage]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
       setCustomMessage("");
     }
   };
 
   const handleRefreshUsers = async () => {
-    console.log("Handle refresh users");
+    //console.log("Handle refresh users");
     setIsLoading(true); // Show loading spinner while fetching
     const updatedUsers = await loadUsers();
     const updatedMessages = await fetchMessages();
@@ -137,31 +173,63 @@ const WebSocketTest = () => {
     setIsLoading(false); // Hide loading spinner after fetching
   };
 
+  const handleBackToUserList = () => {
+    setIsChatActive(false);
+    setSelectedUserId(null);
+    setSelectedUserConn(null);
+  };
+
+  const toggleWebSocketControls = () => {
+    setShowWebSocketControls((prev) => !prev); // Toggle visibility
+  };
+
   return (
     <>
-      <WebSocketControls
-        connectionStatus={connectionStatus}
-        connectWebSocket={connectWebSocket}
-        disconnectWebSocket={disconnectWebSocket}
-        handleRefreshUsers={handleRefreshUsers}
-        isLoading={isLoading}
-      />
-      <UserList
-        users={users}
-        selectedUserId={selectedUserId}
-        handleSelect={handleSelect}
-        isLoading={isLoading}
-      />
+      {isChatActive ? (
+        <>
+          <Button
+            onClick={handleBackToUserList}
+            variant="outlined"
+            style={{ marginBottom: "1rem" }}
+          >
+            Back to User List
+          </Button>
 
-      <MessageInput
-        customMessage={customMessage}
-        setCustomMessage={setCustomMessage}
-        handleSendMessage={handleSendMessage}
-      />
-      <MessageList
-        receivedMessages={filteredMessages}
-        currentUser={name || ""}
-      />
+          <MessageList
+            receivedMessages={filteredMessages}
+            currentUser={name || ""}
+          />
+          <MessageInput
+            message={customMessage}
+            setMessage={setCustomMessage}
+            handleSendMessage={handleSendMessage}
+          />
+        </>
+      ) : (
+        <>
+          <Button onClick={toggleWebSocketControls} variant="outlined">
+            {showWebSocketControls
+              ? "Hide WebSocket Controls"
+              : "Show WebSocket Controls"}
+          </Button>
+
+          {showWebSocketControls && (
+            <WebSocketControls
+              connectionStatus={connectionStatus}
+              connectWebSocket={connectWebSocket}
+              disconnectWebSocket={disconnectWebSocket}
+              handleRefreshUsers={handleRefreshUsers}
+              isLoading={isLoading}
+            />
+          )}
+          <UserList
+            users={users}
+            selectedUserId={selectedUserId}
+            handleSelect={handleSelect}
+            isLoading={isLoading}
+          />
+        </>
+      )}
     </>
   );
 };
