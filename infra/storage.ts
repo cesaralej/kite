@@ -10,7 +10,7 @@ export const messagesTable = new sst.aws.Dynamo("Messages", {
   primaryIndex: { hashKey: "userId", rangeKey: "messageId" },
 });
 
-// Create the DynamoDB table for Users
+// TODO Global secondary index for connections instead of a separate table
 export const usersTable = new sst.aws.Dynamo("Users", {
   fields: {
     userId: "string",
@@ -18,7 +18,6 @@ export const usersTable = new sst.aws.Dynamo("Users", {
   primaryIndex: { hashKey: "userId" },
 });
 
-// Create the DynamoDB table for Conversations
 export const conversationsTable = new sst.aws.Dynamo("Conversations", {
   fields: {
     conversationId: "string",
@@ -27,7 +26,6 @@ export const conversationsTable = new sst.aws.Dynamo("Conversations", {
   primaryIndex: { hashKey: "conversationId", rangeKey: "userId" },
 });
 
-// Create the DynamoDB table for Connections
 export const connectionsTable = new sst.aws.Dynamo("Connections", {
   fields: {
     connectionId: "string",

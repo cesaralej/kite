@@ -14,8 +14,17 @@ import {
 } from "@mui/material";
 import { FaPaperclip, FaCalendarAlt, FaTasks } from "react-icons/fa";
 
-const MessageInput: React.FC = () => {
-  const [message, setMessage] = useState<string>("");
+interface MessageInputProps {
+  message: string;
+  setMessage: (message: string) => void;
+  handleSendMessage: () => void;
+}
+
+const MessageInput = ({
+  message,
+  setMessage,
+  handleSendMessage,
+}: MessageInputProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openTaskDialog, setOpenTaskDialog] = useState<boolean>(false);
   const [openMeetingDialog, setOpenMeetingDialog] = useState<boolean>(false);
@@ -35,11 +44,6 @@ const MessageInput: React.FC = () => {
     date: "",
     time: "",
   });
-
-  const handleSendMessage = () => {
-    // Handle sending the message, task, or meeting invite
-    setMessage("");
-  };
 
   const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -83,7 +87,7 @@ const MessageInput: React.FC = () => {
         fullWidth
         variant="outlined"
         placeholder="Type your message..."
-        value={message}
+        value={message.trim()}
         onChange={(e) => setMessage(e.target.value)}
         sx={{ marginRight: 1 }}
         InputProps={{
@@ -118,7 +122,7 @@ const MessageInput: React.FC = () => {
         variant="contained"
         color="primary"
         onClick={handleSendMessage}
-        disabled={!message} // Adjust as needed for tasks/meetings
+        disabled={!message.trim()} // Adjust as needed for tasks/meetings
       >
         Send
       </Button>

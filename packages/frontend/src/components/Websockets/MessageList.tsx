@@ -1,4 +1,7 @@
 import { Message } from "../../types/Message";
+import { useEffect, useRef } from "react";
+import { Box, List, ListItem } from "@mui/material";
+import MessageCard from "./MessageCard";
 
 interface MessageListProps {
   receivedMessages: Message[];
@@ -6,40 +9,54 @@ interface MessageListProps {
 }
 
 const MessageList = ({ receivedMessages, currentUser }: MessageListProps) => {
-  const sortedMessages = [...receivedMessages].sort((a, b) => {
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
+  function ScrollToBottom() {
+    const elementRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+      if (elementRef.current) {
+        elementRef.current.scrollIntoView();
+      }
+    });
+    return <div ref={elementRef} />;
+  }
 
   return (
-    <div
+    <Box
       style={{
         marginTop: "20px",
         padding: "10px",
         border: "1px solid #ccc",
-        height: "200px",
+        height: "400px",
         overflowY: "auto",
       }}
     >
-      {sortedMessages.length > 0 ? (
-        sortedMessages.map((msg, index) => (
-          <p
-            key={index}
-            style={{
-              margin: 0,
-              textAlign: msg.userId == currentUser ? "right" : "left",
-              backgroundColor:
-                msg.userId == currentUser ? "#daf8e3" : "#f1f1f1",
-              padding: "5px",
-              borderRadius: "5px",
-            }}
-          >
-            {msg.userId}: {msg.content}
-          </p>
+      {receivedMessages.length > 0 ? (
+        receivedMessages.map((msg, index) => (
+          <List sx={{ paddingBottom: 2 }}>
+            <ListItem
+              key={index}
+              sx={{
+                display: "flex",
+                justifyContent:
+                  msg.userId == currentUser ? "flex-end" : "flex-start",
+                padding: 0,
+                marginBottom: 1.5,
+              }}
+            >
+              <MessageCard
+                sender={msg.userId}
+                content={msg.content}
+                timestamp={msg.createdAt}
+                fromCurrentUser={msg.userId == currentUser}
+                isRead={true} // Assuming all messages are read for this example
+              />
+            </ListItem>
+          </List>
         ))
       ) : (
         <p>No messages received yet.</p>
       )}
-    </div>
+      <ScrollToBottom />
+    </Box>
   );
 };
 

@@ -22,7 +22,7 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/"); // Redirect to home if already logged in
+      navigate("/");
     }
   }, [isAuthenticated, navigate]);
 
