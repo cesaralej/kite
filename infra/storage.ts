@@ -32,3 +32,18 @@ export const connectionsTable = new sst.aws.Dynamo("Connections", {
   },
   primaryIndex: { hashKey: "connectionId" },
 });
+
+export const chatsTable = new sst.aws.Dynamo("Chats", {
+  fields: {
+    chatId: "string",
+  },
+  primaryIndex: { hashKey: "chatId" },
+});
+
+export const chatMembersTable = new sst.aws.Dynamo("ChatMembers", {
+  fields: {
+    chatId: "string",
+    userId: "string",
+  },
+  primaryIndex: { hashKey: "chatId", rangeKey: "userId" },
+});
