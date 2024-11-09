@@ -8,8 +8,9 @@ import Login from "./pages/LoginPage";
 import Home from "./pages/HomePage";
 import ChatsPage from "./pages/ChatsPage";
 import ChatPage, { chatLoader } from "./pages/ChatPage";
-import ProfilePage from "./pages/ProfilePage";
-import Tasks from "./pages/TasksPage";
+import ProfilePage, { profileLoader } from "./pages/ProfilePage";
+import TasksPage from "./pages/TasksPage.tsx";
+import { UsersProvider } from "./context/UsersContext";
 import NewTaskPage from "./pages/NewTaskPage";
 import FilesPage from "./pages/FilesPage";
 import DirectoryPage from "./pages/DirectoryPage";
@@ -47,81 +48,34 @@ const App: React.FC = () => {
     createRoutesFromElements(
       <>
         <Route path="login" element={<Login />} />
-        <Route path="/" element={<MainLayout />}>
-          <Route
-            index
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="chats"
-            element={
-              <ProtectedRoute>
-                <ChatsPage />
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <UsersProvider>
+                <MainLayout />
+              </UsersProvider>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Home />} />
+          <Route path="chats" element={<ChatsPage />} />
           <Route
             path="chats/:chatId"
-            element={
-              <ProtectedRoute>
-                <ChatPage />
-              </ProtectedRoute>
-            }
+            element={<ChatPage />}
             loader={chatLoader}
           />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="tasks/new" element={<NewTaskPage />} />
+          <Route path="files" element={<FilesPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="directory" element={<DirectoryPage />} />
           <Route
-            path="tasks"
-            element={
-              <ProtectedRoute>
-                <Tasks />
-              </ProtectedRoute>
-            }
+            path="directory/:userId"
+            element={<ProfilePage />}
+            loader={profileLoader}
           />
-          <Route
-            path="tasks/new"
-            element={
-              <ProtectedRoute>
-                <NewTaskPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="files"
-            element={
-              <ProtectedRoute>
-                <FilesPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="directory"
-            element={
-              <ProtectedRoute>
-                <DirectoryPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="learn"
-            element={
-              <ProtectedRoute>
-                <LearningResourcesPage />
-              </ProtectedRoute>
-            }
-          />
-
+          <Route path="learn" element={<LearningResourcesPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </>

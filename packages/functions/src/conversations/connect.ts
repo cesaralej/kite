@@ -10,15 +10,10 @@ import {
 const dynamoDb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 export const main = Util.handler(async (event) => {
-  //console.log("Connect event", event);
-  //console.log("Connect User: ", event.requestContext.authorizer);
-  //console.log("User? ", event.queryStringParameters?.identityId);
-
   const userId = event.queryStringParameters?.identityId;
   const connectionId = event.requestContext.connectionId;
 
-  console.log(`Connection online: ${connectionId}`);
-  console.log(`User: ${userId}`);
+  console.log(`Connecting: ${userId} - ${connectionId}`);
 
   const params = {
     TableName: Resource.Users.name, // Table name
@@ -44,17 +39,17 @@ export const main = Util.handler(async (event) => {
   };
 
   await dynamoDb.send(new UpdateCommand(params));
-  console.log(
+  /* console.log(
     "Updated User:",
     params.Key.userId,
     params.ExpressionAttributeValues[":webSocketConnectionId"]
-  );
+  ); */
   await dynamoDb.send(new PutCommand(params2));
-  console.log(
+  /* console.log(
     "Put Connection:",
     params2.Item.userId,
     params2.Item.connectionId
-  );
+  ); */
 
   return JSON.stringify(params.ExpressionAttributeValues);
 });

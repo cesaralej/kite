@@ -14,21 +14,18 @@ import {
 
 const dynamoDb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
-//TODO this is not using the handler
+//TODO this is not using the handler. It is also getting the user ID from teh dynamo table...shoudl I send it in the url instead so that I dont have to query teh table?
 export const main: APIGatewayProxyHandler = async (event) => {
   // Parse the incoming WebSocket message
   const body = JSON.parse(event.body || "{}");
+  //console.log("Body:", body.data);
 
-  const data = JSON.parse(body.data.message);
-
-  // How do I deal with multiple connection IDs for status updates? I think it does not matter to leave the toUserId null
-  const messageContent = data.content;
-  const toUserId = data.toUserId;
-  const toConnectionId = data.toConnectionId;
-  const userId = data.userId;
+  // Extract the actual message content from the body
+  //console.log(body);
+  const messageContent = body.data.message;
+  const toUserId = body.data.userId;
+  const toConnectionId = body.data.userConn;
   const connectionId = event.requestContext.connectionId;
-
-  console.log("Sending message:", messageContent);
 
   if (!messageContent) {
     return {
@@ -38,6 +35,23 @@ export const main: APIGatewayProxyHandler = async (event) => {
   }
 
   try {
+    const getParams = {
+      TableName: Resource.Connections.name,
+      Key: {
+        connectionId: connectionId, // Assuming you are using connectionId as the key
+      },
+    };
+
+    let userId;
+
+    const result = await dynamoDb.send(new GetCommand(getParams));
+
+    if (result.Item) {
+      userId = result.Item.userId; // Assuming userId is stored in the same entry
+    } else {
+      console.error(`No entry found for connectionId: ${connectionId}`);
+    }
+
     // Parameters for DynamoDB PutCommand
     const putParams = {
       TableName: Resource.Messages.name, // Table linked to the "Messages" resource

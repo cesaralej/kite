@@ -207,6 +207,12 @@ const WebSocketTest = () => {
         </>
       ) : (
         <>
+          <UserList
+            users={users}
+            selectedUserId={selectedUserId}
+            handleSelect={handleSelect}
+            isLoading={isLoading}
+          />
           <Button onClick={toggleWebSocketControls} variant="outlined">
             {showWebSocketControls
               ? "Hide WebSocket Controls"
@@ -222,12 +228,6 @@ const WebSocketTest = () => {
               isLoading={isLoading}
             />
           )}
-          <UserList
-            users={users}
-            selectedUserId={selectedUserId}
-            handleSelect={handleSelect}
-            isLoading={isLoading}
-          />
         </>
       )}
     </>

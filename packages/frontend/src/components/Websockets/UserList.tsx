@@ -20,7 +20,7 @@ const UserList = ({
 
   return isLoading ? (
     <Typography variant="body1" align="center">
-      Loading users...
+      Loading chats...
     </Typography>
   ) : (
     <List>

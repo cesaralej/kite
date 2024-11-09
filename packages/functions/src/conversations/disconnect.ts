@@ -15,6 +15,7 @@ export const main = Util.handler(async (event) => {
   // console.log("Disconnect event", event);
 
   const connectionId = event.requestContext.connectionId;
+  console.log(`Disonnecting: ${connectionId}`);
 
   // Retrieve the userId associated with the connectionId
   const params = {
@@ -31,7 +32,7 @@ export const main = Util.handler(async (event) => {
     console.error(`No entry found for connectionId: ${connectionId}`);
   }
   if (result.Item) {
-    userId = result.Item.userId; // Assuming userId is stored in the same entry
+    userId = result.Item.userId;
   } else {
     console.error(`No entry found for connectionId: ${connectionId}`);
   }

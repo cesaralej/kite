@@ -65,10 +65,10 @@ export const useWebSocket = (reconnectInterval = 3000) => {
       websocket.onclose = () => {
         updateConnectionStatus("Disconnected");
         // Only attempt reconnection if the component is still mounted
-        reconnectTimeoutRef.current = setTimeout(
+        /* reconnectTimeoutRef.current = setTimeout(
           connectWebSocket,
           reconnectInterval
-        );
+        ); */
       };
 
       setWs(websocket);
